@@ -1,62 +1,76 @@
 import chess
-import pygame
-from evaluate import evaluate_board
+import time
+import chess.polyglot
+from threading import Thread
+from queue import Queue
+from searcher import Searcher  
+class AI:
+    def __init__(self):
+        self.move = None
 
-def minimax(board, depth, alpha, beta, maximizing_player):
-    if depth == 0 or board.is_game_over():
-        return evaluate_board(board)
+    def run_search_process(self, board_state, return_queue):
+        def search_and_update():
+            try:
+                start = time.time()  # ⏱️ Bắt đầu đo thời gian
+                searcher = Searcher()
+                best_move = searcher.iterative_deepening(board_state, max_depth=4,time_limit=9.5)
+                end = time.time()  # ⏱️ Kết thúc đo thời gian
+                print(f"[AI] Đã chọn nước đi: {best_move} trong {end - start:.2f} giây")
 
-    if maximizing_player:
-        max_eval = float('-inf')
-        for move in board.legal_moves:
-            board.push(move)
-            eval = minimax(board, depth - 1, alpha, beta, False)
-            board.pop()
-            max_eval = max(max_eval, eval)
-            alpha = max(alpha, eval)
-            if beta <= alpha:
-                break
-        return max_eval
-    else:
-        min_eval = float('inf')
-        for move in board.legal_moves:
-            board.push(move)
-            eval = minimax(board, depth - 1, alpha, beta, True)
-            board.pop()
-            min_eval = min(min_eval, eval)
-            beta = min(beta, eval)
-            if beta <= alpha:
-                break
-        return min_eval
+                self.move = best_move
+                if return_queue:
+                    return_queue.put(best_move)
+            except Exception as e:
+                print("[Lỗi] Lỗi trong tìm kiếm:", e)
+                self.move = None
+                if return_queue:
+                    return_queue.put(None)
 
-def best_move(board, depth):
-    ai_color = board.turn  # TRUE nếu là Trắng, FALSE nếu là Đen
-    best_move_found = None
-    max_eval = float('-inf')
+        Thread(target=search_and_update).start()
 
-    def move_score(board, move):
-        score = 0
-        if board.is_capture(move):
-            victim = board.piece_at(move.to_square)
-            attacker = board.piece_at(move.from_square)
-            if victim and attacker:
-                score += 10 * victim.piece_type - attacker.piece_type
-        if board.gives_check(move):
-            score += 3
-        return score
+    def update_ai_move(self, game, board_state):
+        self.move = None
+        return_queue = Queue()
 
-    moves = sorted(board.legal_moves, key=lambda m: move_score(board, m), reverse=True)
+        try:
+            with chess.polyglot.open_reader("baron30.bin") as reader:
+                try:
+                    entry = reader.find(board_state)
+                    self.move = entry.move
+                    print(f"[AI] Sử dụng sách khai cuộc: {self.move}")
+                    game.board.push(self.move)
+                    game.history_index = len(game.board.move_stack)
+                    game.view_board = game.board.copy()
+                    game.check_game_end()
+                    if hasattr(game, 'root'):
+                        game.root.title("Cờ vua - Đã xong")
+                    return
+                except IndexError:
+                    print("[AI] Không tìm thấy nước đi trong sách khai cuộc. Dùng Searcher.")
+        except FileNotFoundError:
+            print("[Lỗi] Không tìm thấy tệp baron30.bin. Dùng Searcher.")
+        except Exception as e:
+            print("[Lỗi] Lỗi khi mở sách khai cuộc:", e)
 
-    for move in moves:
-        board.push(move)
-        eval = minimax(board, depth - 1, float('-inf'), float('inf'), False)
-        board.pop()
+        self.run_search_process(board_state, return_queue)
 
-        # 🧠 Nếu AI là Đen, đảo dấu lại để Đen chọn điểm thấp
-        eval = eval if ai_color == chess.WHITE else -eval
+        def check_result():
+            if self.move and self.move in game.board.legal_moves:
+                game.board.push(self.move)
+                game.history_index = len(game.board.move_stack)
+                game.view_board = game.board.copy()
+                game.check_game_end()
+                if hasattr(game, 'root'):
+                    game.root.title("Cờ vua - Đã xong")
+            elif not self.move:
+                if hasattr(game, 'root'):
+                    game.root.after(50, check_result)
+                else:
+                    time.sleep(0.05)
+                    Thread(target=check_result).start()
 
-        if eval > max_eval:
-            max_eval = eval
-            best_move_found = move
-
-    return best_move_found if best_move_found else moves[0]
+        if hasattr(game, 'root'):
+            game.root.title("AI đang nghĩ...")
+            game.root.after(50, check_result)
+        else:
+            check_result()

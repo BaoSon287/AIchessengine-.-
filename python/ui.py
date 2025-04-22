@@ -38,3 +38,21 @@ def highlight_moves(screen, board, square):
         col, row = chess.square_file(move.to_square), 7 - chess.square_rank(move.to_square)
         pygame.draw.circle(screen, HIGHLIGHT,
                            (col * SQUARE_SIZE + SQUARE_SIZE // 2, row * SQUARE_SIZE + SQUARE_SIZE // 2), 10)
+        
+def draw_promotion_choices(screen, color):
+    options = [chess.QUEEN, chess.ROOK, chess.BISHOP, chess.KNIGHT]
+    names = ['q', 'r', 'b', 'n']
+    if color == chess.WHITE:
+        names = [n + '1' for n in names]
+
+    for i, name in enumerate(names):
+        rect = pygame.Rect(i * 75 + 150, 225, 75, 75)
+        pygame.draw.rect(screen, (200, 200, 200), rect)
+        screen.blit(PIECE_IMAGES[name], (i * 75 + 150, 225))
+def get_promotion_choice(pos, color):
+    x, y = pos
+    if 225 <= y <= 300 and 150 <= x <= 450:
+        index = (x - 150) // 75
+        options = [chess.QUEEN, chess.ROOK, chess.BISHOP, chess.KNIGHT]
+        return options[index]
+    return None
