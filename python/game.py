@@ -4,37 +4,47 @@ import copy
 from ai import AI
 
 class Game:
-    def __init__(self):
+    def __init__(self, ai_color=chess.BLACK, flip=False):  
         self.board = chess.Board()
-        self.view_board = self.board.copy()  # Khởi tạo view_board đồng bộ
+        self.view_board = self.board.copy()
         self.history_index = 0
         self.selected_square = None
         self.ai_thinking = False
-        self.ai_color = chess.BLACK
+        self.ai_color = ai_color
         self.ai_move_time = 0
         self.clock = pygame.time.Clock()
         self.running = True
         self.ai = AI()
-        print("[Debug] Khởi tạo Game instance") 
+        self.flip = flip  # Thêm biến flip để xác định hướng bàn cờ
+        self.last_move_from = None # Lưu vị trí quân cờ đã đi
+        self.last_move_to = None # Lưu vị trí quân cờ đã đi
+        print(f"[Debug] Game started. AI chơi màu {'Trắng' if self.ai_color == chess.WHITE else 'Đen'}")
+
 
     def handle_event(self, event):
         if not self.running:
-            return 
+            return  
         if event.type == pygame.MOUSEBUTTONDOWN and not self.ai_thinking:
             x, y = pygame.mouse.get_pos()
             col, row = x // 75, y // 75
+            if self.flip:
+                col = 7 - col
+                row = 7 - row
             square = chess.square(col, 7 - row)
+
             if self.selected_square is None:
                 if self.board.piece_at(square) and self.board.color_at(square) == self.board.turn:
                     self.selected_square = square
             else:
                 move = self.create_move(self.selected_square, square)
                 if move in self.board.legal_moves:
+                    self.last_move_from = move.from_square
+                    self.last_move_to = move.to_square
                     self.board.push(move)
                     self.history_index = len(self.board.move_stack)
-                    self.view_board = self.board.copy() 
+                    self.view_board = self.board.copy()  
                     self.check_game_end()
-                    if not self.board.turn and not self.ai_thinking:
+                    if self.board.turn == self.ai_color and not self.ai_thinking:
                         self.ai_thinking = True
                         self.ai_move_time = pygame.time.get_ticks()
                 self.selected_square = None
@@ -62,11 +72,17 @@ class Game:
         return chess.Move(from_sq, to_sq)
 
     def update_ai_move(self):
-        if self.running and not self.board.turn and self.ai_thinking and pygame.time.get_ticks() - self.ai_move_time >= 1000:
+        if self.running and self.board.turn == self.ai_color and self.ai_thinking and pygame.time.get_ticks() - self.ai_move_time >= 1000:
             board_copy = copy.deepcopy(self.board)
             self.ai.update_ai_move(self, board_copy)
-            self.view_board = self.board.copy() 
+            self.view_board = self.board.copy()  
             self.ai_thinking = False
+
+            if self.board.move_stack:
+                last_move = self.board.move_stack[-1]
+                self.last_move_from = last_move.from_square
+                self.last_move_to = last_move.to_square
+
 
     def check_game_end(self):
         if self.board.is_checkmate():
