@@ -10,8 +10,8 @@ if __name__ == "__main__":
     pygame.display.set_caption("Chess Game")
 
     font = pygame.font.SysFont(None, 48)
-    text1 = font.render("Button 1: AI play White", True, (255, 255, 255))
-    text2 = font.render("Button 2: AI play Black", True, (255, 255, 255))
+    text1 = font.render("AI play White", True, (255, 255, 255))
+    text2 = font.render("AI play Black", True, (255, 255, 255))
     
     background_img = pygame.image.load("assets/background.jpg")
     background_img = pygame.transform.scale(background_img, (WIDTH, HEIGHT))
@@ -29,11 +29,14 @@ if __name__ == "__main__":
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     exit()
-                elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_1:
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    mouse_x, mouse_y = event.pos
+                    if (WIDTH // 2 - text1.get_width() // 2 <= mouse_x <= WIDTH // 2 + text1.get_width() // 2 and
+                        HEIGHT // 2 - 50 <= mouse_y <= HEIGHT // 2 - 50 + text1.get_height()):
                         ai_color = chess.WHITE
                         waiting = False
-                    elif event.key == pygame.K_2:
+                    elif (WIDTH // 2 - text2.get_width() // 2 <= mouse_x <= WIDTH // 2 + text2.get_width() // 2 and
+                          HEIGHT // 2 + 10 <= mouse_y <= HEIGHT // 2 + 10 + text2.get_height()):
                         ai_color = chess.BLACK
                         waiting = False
 
