@@ -1,6 +1,7 @@
 import pygame
 from ui import draw_board, draw_pieces, highlight_moves
 from game import Game
+from ui import draw_promotion_choices
 import chess
 
 if __name__ == "__main__":
@@ -10,19 +11,33 @@ if __name__ == "__main__":
     pygame.display.set_caption("Chess Game")
 
     font = pygame.font.SysFont(None, 48)
-    text1 = font.render("AI play White", True, (255, 255, 255))
+    text1 = font.render("AI play White", True, (0, 0, 0))
     text2 = font.render("AI play Black", True, (255, 255, 255))
-    
+
     background_img = pygame.image.load("assets/background.jpg")
     background_img = pygame.transform.scale(background_img, (WIDTH, HEIGHT))
+
+    button_width, button_height = 250, 60
+    white_rect = pygame.Rect((WIDTH - button_width) // 2, HEIGHT // 2 - 80, button_width, button_height)
+    black_rect = pygame.Rect((WIDTH - button_width) // 2, HEIGHT // 2 + 20, button_width, button_height)    
 
     while True:
         waiting = True
         ai_color = None
         while waiting:
-            screen.blit(background_img, (0, 0)) 
-            screen.blit(text1, (WIDTH // 2 - text1.get_width() // 2, HEIGHT // 2 - 50))
-            screen.blit(text2, (WIDTH // 2 - text2.get_width() // 2, HEIGHT // 2 + 10))
+            screen.blit(background_img, (0, 0))
+
+            pygame.draw.rect(screen, (255, 255, 255), white_rect)
+            screen.blit(text1, (
+                white_rect.centerx - text1.get_width() // 2,
+                white_rect.centery - text1.get_height() // 2
+            ))
+            pygame.draw.rect(screen, (0, 0, 0), black_rect)
+            screen.blit(text2, (
+                black_rect.centerx - text2.get_width() // 2,
+                black_rect.centery - text2.get_height() // 2
+            ))
+
             pygame.display.flip()
 
             for event in pygame.event.get():
@@ -30,13 +45,10 @@ if __name__ == "__main__":
                     pygame.quit()
                     exit()
                 elif event.type == pygame.MOUSEBUTTONDOWN:
-                    mouse_x, mouse_y = event.pos
-                    if (WIDTH // 2 - text1.get_width() // 2 <= mouse_x <= WIDTH // 2 + text1.get_width() // 2 and
-                        HEIGHT // 2 - 50 <= mouse_y <= HEIGHT // 2 - 50 + text1.get_height()):
+                    if white_rect.collidepoint(event.pos):
                         ai_color = chess.WHITE
                         waiting = False
-                    elif (WIDTH // 2 - text2.get_width() // 2 <= mouse_x <= WIDTH // 2 + text2.get_width() // 2 and
-                          HEIGHT // 2 + 10 <= mouse_y <= HEIGHT // 2 + 10 + text2.get_height()):
+                    elif black_rect.collidepoint(event.pos):
                         ai_color = chess.BLACK
                         waiting = False
 
@@ -59,12 +71,16 @@ if __name__ == "__main__":
                     game.handle_event(event)
 
             screen.fill((0, 0, 0))
-            draw_board(screen, flip,last_move_from=game.last_move_from, last_move_to=game.last_move_to)
-            if game.selected_square is not None and game.history_index == len(game.board.move_stack):
+            draw_board(screen, flip,
+                       last_move_from=game.last_move_from,
+                       last_move_to=game.last_move_to)
+            if game.promoting:
+                draw_promotion_choices(screen, game.promotion_color)
+
+            elif game.selected_square is not None and game.history_index == len(game.board.move_stack):
                 highlight_moves(screen, game.view_board, game.selected_square, flip)
+
             draw_pieces(screen, game.view_board, flip)
-
-
             game.update_ai_move()
 
             if game.history_index < len(game.board.move_stack):

@@ -3,7 +3,7 @@ import time
 import chess.polyglot
 from threading import Thread
 from queue import Queue
-from search import Searcher  
+from searcher import Searcher  
 class AI:
     def __init__(self):
         self.move = None
@@ -29,7 +29,8 @@ class AI:
                     # ❌ Nếu không tìm thấy, dùng Searcher
                     if move is None:
                         searcher = Searcher()
-                        move = searcher.iterative_deepening(board_state, max_depth=6, time_limit=9)
+                        move = searcher.iterative_deepening(board_state, max_depth=7, time_limit=9)
+                        print("Current turn:", "White" if board_state.turn == chess.WHITE else "Black")
                         print(f"[AI] Đã chọn nước đi: {move} trong {time.time() - start:.2f} giây")
 
                     self.move = move
@@ -57,10 +58,11 @@ class AI:
                     game.board.push(self.move)
                     game.history_index = len(game.board.move_stack)
                     game.view_board = game.board.copy()
-                    # Cập nhật last_move_from và last_move_to
-                    game.last_move_from = self.move.from_square
-                    game.last_move_to = self.move.to_square
+                    game.last_move_from = self.move.from_square 
+                    game.last_move_to = self.move.to_square 
                     game.check_game_end()
+                    if hasattr(game, 'root'):
+                        game.root.title("Cờ vua - Đã xong")
                     return
                 except IndexError:
                     print("[AI] Không tìm thấy nước đi trong sách khai cuộc. Dùng Searcher.")
@@ -76,12 +78,20 @@ class AI:
                 game.board.push(self.move)
                 game.history_index = len(game.board.move_stack)
                 game.view_board = game.board.copy()
-                # Cập nhật last_move_from và last_move_to
-                game.last_move_from = self.move.from_square
-                game.last_move_to = self.move.to_square
+                game.last_move_from = self.move.from_square 
+                game.last_move_to = self.move.to_square  
                 game.check_game_end()
+                if hasattr(game, 'root'):
+                    game.root.title("Cờ vua - Đã xong")
             elif not self.move:
-                time.sleep(0.05)
-                Thread(target=check_result).start()
+                if hasattr(game, 'root'):
+                    game.root.after(50, check_result)
+                else:
+                    time.sleep(0.05)
+                    Thread(target=check_result).start()
 
-        check_result()
+        if hasattr(game, 'root'):
+            game.root.title("AI đang nghĩ...")
+            game.root.after(50, check_result)
+        else:
+            check_result()

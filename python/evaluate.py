@@ -305,14 +305,14 @@ def evaluate_board(board):
     white_score += evaluate_piece_square(board, chess.WHITE, white_end)
     black_score += evaluate_piece_square(board, chess.BLACK, black_end)
 
-    white_score += evaluate_pawns(board, chess.WHITE)
-    black_score += evaluate_pawns(board, chess.BLACK)
+    # white_score += evaluate_pawns(board, chess.WHITE)
+    # black_score += evaluate_pawns(board, chess.BLACK)
 
-    white_score += king_pawn_shield(board, chess.WHITE)
-    black_score += king_pawn_shield(board, chess.BLACK)
+    # white_score += king_pawn_shield(board, chess.WHITE)
+    # black_score += king_pawn_shield(board, chess.BLACK)
 
-    white_score += mop_up_eval(board, chess.WHITE, white_mat, black_mat, black_end)
-    black_score += mop_up_eval(board, chess.BLACK, black_mat, white_mat, white_end)
+    # white_score += mop_up_eval(board, chess.WHITE, white_mat, black_mat, black_end)
+    # black_score += mop_up_eval(board, chess.BLACK, black_mat, white_mat, white_end)
 
     eval_score = white_score - black_score
     return eval_score if board.turn == chess.WHITE else -eval_score

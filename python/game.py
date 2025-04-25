@@ -2,7 +2,7 @@ import pygame
 import chess
 import copy
 from ai import AI
-
+from ui import get_promotion_choice
 class Game:
     def __init__(self, ai_color=chess.BLACK, flip=False):  
         self.board = chess.Board()
@@ -18,12 +18,40 @@ class Game:
         self.flip = flip  # Thêm biến flip để xác định hướng bàn cờ
         self.last_move_from = None # Lưu vị trí quân cờ đã đi
         self.last_move_to = None # Lưu vị trí quân cờ đã đi
+        self.promoting = False
+        self.promotion_move = None
+        self.promotion_color = None
+
         print(f"[Debug] Game started. AI chơi màu {'Trắng' if self.ai_color == chess.WHITE else 'Đen'}")
 
 
     def handle_event(self, event):
         if not self.running:
             return  
+        
+        if self.promoting and event.type == pygame.MOUSEBUTTONDOWN:
+            x, y = event.pos
+            if not (225 <= y <= 300 and 150 <= x <= 450):
+                self.promoting = False 
+                return
+
+            choice = get_promotion_choice(event.pos, self.promotion_color)
+            if choice is not None:
+                move = chess.Move(self.promotion_move.from_square, self.promotion_move.to_square, promotion=choice)
+                if move in self.board.legal_moves:
+                    self.board.push(move)
+                    self.history_index = len(self.board.move_stack)
+                    self.view_board = self.board.copy()
+                    self.last_move_from = move.from_square
+                    self.last_move_to = move.to_square
+                    self.check_game_end()
+                    if self.board.turn == self.ai_color:
+                        self.ai_thinking = True
+                        self.ai_move_time = pygame.time.get_ticks()
+                self.promoting = False
+                self.promotion_move = None
+                return
+            
         if event.type == pygame.MOUSEBUTTONDOWN and not self.ai_thinking:
             x, y = pygame.mouse.get_pos()
             col, row = x // 75, y // 75
@@ -38,6 +66,14 @@ class Game:
             else:
                 move = self.create_move(self.selected_square, square)
                 if move in self.board.legal_moves:
+                    piece = self.board.piece_at(move.from_square)
+                    if piece.piece_type == chess.PAWN:
+                        rank = chess.square_rank(move.to_square)
+                        if (piece.color == chess.WHITE and rank == 7) or (piece.color == chess.BLACK and rank == 0):
+                            self.promoting = True
+                            self.promotion_move = move
+                            self.promotion_color = piece.color
+                            return
                     self.last_move_from = move.from_square
                     self.last_move_to = move.to_square
                     self.board.push(move)
@@ -60,8 +96,15 @@ class Game:
     def update_view_board(self):
         """Cập nhật view_board dựa trên history_index"""
         self.view_board = chess.Board()
-        for move in self.board.move_stack[:self.history_index]:
+        self.last_move_from = None
+        self.last_move_to = None
+
+        for i, move in enumerate(self.board.move_stack[:self.history_index]):
             self.view_board.push(move)
+            if i == self.history_index - 1:
+                self.last_move_from = move.from_square
+                self.last_move_to = move.to_square
+
 
     def create_move(self, from_sq, to_sq):
         piece = self.board.piece_at(from_sq)

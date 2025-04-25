@@ -80,17 +80,22 @@ def highlight_moves(screen, board, from_square, flip=False):
 def draw_promotion_choices(screen, color):
     options = [chess.QUEEN, chess.ROOK, chess.BISHOP, chess.KNIGHT]
     names = ['q', 'r', 'b', 'n']
+    
     if color == chess.WHITE:
         names = [n + '1' for n in names]
-
+    center_x = 300 
+    center_y = 300 
     for i, name in enumerate(names):
-        rect = pygame.Rect(i * 75 + 150, 225, 75, 75)
+        rect = pygame.Rect(center_x - 150 + i * 75, center_y - 75, 75, 75)
         pygame.draw.rect(screen, (200, 200, 200), rect)
-        screen.blit(PIECE_IMAGES[name], (i * 75 + 150, 225))
+        screen.blit(PIECE_IMAGES[name], (center_x - 150 + i * 75, center_y - 75))
+
 def get_promotion_choice(pos, color):
     x, y = pos
-    if 225 <= y <= 300 and 150 <= x <= 450:
-        index = (x - 150) // 75
+    center_x = 300
+    center_y = 300
+    if center_y - 75 <= y <= center_y and center_x - 150 <= x <= center_x + 150:
+        index = (x - (center_x - 150)) // 75
         options = [chess.QUEEN, chess.ROOK, chess.BISHOP, chess.KNIGHT]
         return options[index]
     return None
