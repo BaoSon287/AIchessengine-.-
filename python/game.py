@@ -3,8 +3,10 @@ import chess
 import copy
 from ai import AI
 from ui import get_promotion_choice
+
+
 class Game:
-    def __init__(self, ai_color=chess.BLACK, flip=False):  
+    def __init__(self, ai_color=chess.BLACK, flip=False):
         self.board = chess.Board()
         self.view_board = self.board.copy()
         self.history_index = 0
@@ -15,24 +17,23 @@ class Game:
         self.clock = pygame.time.Clock()
         self.running = True
         self.ai = AI()
-        self.flip = flip  # Thêm biến flip để xác định hướng bàn cờ
-        self.last_move_from = None # Lưu vị trí quân cờ đã đi
-        self.last_move_to = None # Lưu vị trí quân cờ đã đi
+        self.flip = flip
+        self.last_move_from = None
+        self.last_move_to = None
         self.promoting = False
         self.promotion_move = None
         self.promotion_color = None
 
         print(f"[Debug] Game started. AI chơi màu {'Trắng' if self.ai_color == chess.WHITE else 'Đen'}")
 
-
     def handle_event(self, event):
         if not self.running:
-            return  
-        
+            return
+
         if self.promoting and event.type == pygame.MOUSEBUTTONDOWN:
             x, y = event.pos
             if not (225 <= y <= 300 and 150 <= x <= 450):
-                self.promoting = False 
+                self.promoting = False
                 return
 
             choice = get_promotion_choice(event.pos, self.promotion_color)
@@ -44,17 +45,22 @@ class Game:
                     self.view_board = self.board.copy()
                     self.last_move_from = move.from_square
                     self.last_move_to = move.to_square
-                    self.check_game_end()
+                    # Không gọi check_game_end() ngay, để nước đi được hiển thị trước
                     if self.board.turn == self.ai_color:
                         self.ai_thinking = True
                         self.ai_move_time = pygame.time.get_ticks()
                 self.promoting = False
                 self.promotion_move = None
                 return
-            
+
         if event.type == pygame.MOUSEBUTTONDOWN and not self.ai_thinking:
             x, y = pygame.mouse.get_pos()
-            col, row = x // 75, y // 75
+            if x < 30 or y >= 600:
+                return  # click ngoài bàn cờ
+
+            col = (x - 30) // 75
+            row = y // 75
+
             if self.flip:
                 col = 7 - col
                 row = 7 - row
@@ -78,9 +84,9 @@ class Game:
                     self.last_move_to = move.to_square
                     self.board.push(move)
                     self.history_index = len(self.board.move_stack)
-                    self.view_board = self.board.copy()  
-                    self.check_game_end()
-                    if self.board.turn == self.ai_color and not self.ai_thinking:
+                    self.view_board = self.board.copy()
+                    # Không gọi check_game_end() ngay, để nước đi được hiển thị trước
+                    if self.board.turn == self.ai_color:
                         self.ai_thinking = True
                         self.ai_move_time = pygame.time.get_ticks()
                 self.selected_square = None
@@ -105,7 +111,6 @@ class Game:
                 self.last_move_from = move.from_square
                 self.last_move_to = move.to_square
 
-
     def create_move(self, from_sq, to_sq):
         piece = self.board.piece_at(from_sq)
         if piece and piece.piece_type == chess.PAWN:
@@ -118,7 +123,7 @@ class Game:
         if self.running and self.board.turn == self.ai_color and self.ai_thinking and pygame.time.get_ticks() - self.ai_move_time >= 1000:
             board_copy = copy.deepcopy(self.board)
             self.ai.update_ai_move(self, board_copy)
-            self.view_board = self.board.copy()  
+            self.view_board = self.board.copy()
             self.ai_thinking = False
 
             if self.board.move_stack:
@@ -126,6 +131,8 @@ class Game:
                 self.last_move_from = last_move.from_square
                 self.last_move_to = last_move.to_square
 
+            # Kiểm tra trạng thái kết thúc sau khi nước đi của AI được áp dụng
+            self.check_game_end()
 
     def check_game_end(self):
         if self.board.is_checkmate():
