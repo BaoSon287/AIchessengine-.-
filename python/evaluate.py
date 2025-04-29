@@ -110,7 +110,7 @@ ROOK_TABLE = np.array(ROOK_TABLE)
 QUEEN_TABLE = np.array(QUEEN_TABLE)
 KING_START = np.array(KING_START)
 KING_END = np.array(KING_END)
-# --- Piece-square tables from SebLague's PieceSquareTable.cs ---
+
 PAWN_TABLE = [
     0, 0, 0, 0, 0, 0, 0, 0,
     50, 50, 50, 50, 50, 50, 50, 50,
@@ -242,56 +242,6 @@ def evaluate_piece_square(board, color, endgame_t):
             value += table_val
     return value
 
-def evaluate_pawns(board, color):
-    bonus = 0
-    isolated_penalty = [-10, -25, -50, -75, -75, -75, -75, -75, -75]
-    passed_bonus = [0, 120, 80, 50, 30, 15, 15, 15]
-    pawns = list(board.pieces(chess.PAWN, color))
-    other_pawns = board.pieces(chess.PAWN, not color)
-    file_pawn_map = {chess.square_file(sq): [] for sq in pawns}
-    for sq in pawns:
-        file_pawn_map[chess.square_file(sq)].append(sq)
-    for sq in pawns:
-        file = chess.square_file(sq)
-        rank = chess.square_rank(sq) if color == chess.WHITE else 7 - chess.square_rank(sq)
-        if not any(chess.square_file(op) in [file - 1, file, file + 1] for op in other_pawns):
-            bonus += passed_bonus[rank]
-        if not any(f in file_pawn_map for f in [file - 1, file + 1] if 0 <= f <= 7):
-            bonus += isolated_penalty[len(pawns)]
-    return bonus
-
-def king_pawn_shield(board, color):
-    king_sq = board.king(color)
-    if king_sq is None:
-        return 0
-    shield_squares = []
-    file = chess.square_file(king_sq)
-    rank = chess.square_rank(king_sq)
-    dirs = [-1, 0, 1]
-    for df in dirs:
-        for dr in [1, 2]:
-            f = file + df
-            r = rank + dr if color == chess.WHITE else rank - dr
-            if 0 <= f <= 7 and 0 <= r <= 7:
-                shield_squares.append(chess.square(f, r))
-    penalty = 0
-    for i, sq in enumerate(shield_squares[:3]):
-        if board.piece_at(sq) != chess.Piece(chess.PAWN, color):
-            penalty += [4, 7, 4][i]
-    return -penalty
-
-def mop_up_eval(board, color, my_mat, opp_mat, endgame_t):
-    if my_mat > opp_mat + 200 and endgame_t > 0:
-        my_king = board.king(color)
-        opp_king = board.king(not color)
-        if my_king is None or opp_king is None:
-            return 0
-        dist = abs(chess.square_file(my_king) - chess.square_file(opp_king)) + \
-               abs(chess.square_rank(my_king) - chess.square_rank(opp_king))
-        center_dist = abs(chess.square_file(opp_king) - 3.5) + abs(chess.square_rank(opp_king) - 3.5)
-        return int(((14 - dist) * 4 + center_dist * 10) * endgame_t)
-    return 0
-
 def evaluate_board(board):
     if board.is_checkmate():
         return -999999 if board.turn == chess.WHITE else 999999
@@ -304,15 +254,6 @@ def evaluate_board(board):
 
     white_score += evaluate_piece_square(board, chess.WHITE, white_end)
     black_score += evaluate_piece_square(board, chess.BLACK, black_end)
-
-    # white_score += evaluate_pawns(board, chess.WHITE)
-    # black_score += evaluate_pawns(board, chess.BLACK)
-
-    # white_score += king_pawn_shield(board, chess.WHITE)
-    # black_score += king_pawn_shield(board, chess.BLACK)
-
-    # white_score += mop_up_eval(board, chess.WHITE, white_mat, black_mat, black_end)
-    # black_score += mop_up_eval(board, chess.BLACK, black_mat, white_mat, white_end)
 
     eval_score = white_score - black_score
     return eval_score if board.turn == chess.WHITE else -eval_score
