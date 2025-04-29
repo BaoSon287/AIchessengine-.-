@@ -4,8 +4,6 @@
 - **Alpha-Beta Pruning**
 - **Quiescence Search**
 - **Null Move Pruning**
-- **Late Move Reductions (LMR)**
-- **Principal Variation Search (PVS)**
 ### Transposition Table
 - Lưu trữ các thế cờ đã được đánh giá
 - Sử dụng **Zobrist Hashing** để mã hóa trạng thái bàn cờ
