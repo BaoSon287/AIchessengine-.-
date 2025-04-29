@@ -23,8 +23,7 @@
 ##### 📖 Opening Book 
 - Sử dụng **Opening Book** dưới định dạng **Polyglot (`.bin`)**
 ###### ▶️ Cách chạy
-```bash
-pip install pygame python-chess
-python main.py
+- pip install pygame python-chess
+- python main.py
 ####### 📚 Nguồn tham khảo
 https://www.youtube.com/watch?v=U4ogK0MIzqk&t=1045s
