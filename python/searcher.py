@@ -78,7 +78,7 @@ class Searcher:
         last_completed_best_move = None
         legal_moves = list(board.legal_moves)
         if len(legal_moves) == 1:
-            return legal_moves[0]  # Nếu chỉ còn 1 nước thì chơi luôn
+            return legal_moves[0]  
         for depth in range(1, max_depth + 1):
             if time.time() - self.start_time > self.time_limit:
                 break
@@ -253,7 +253,6 @@ class Searcher:
                     if is_pv and alpha < val < beta:
                         val = -self.search(board, depth - 1, ply + 1, -beta, -alpha)
 
-            # val = -self.search(board, depth - 1, ply + 1, -beta, -alpha)
             board.pop()
 
             if self.stop_search:

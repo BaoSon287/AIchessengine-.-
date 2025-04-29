@@ -45,7 +45,6 @@ class Game:
                     self.view_board = self.board.copy()
                     self.last_move_from = move.from_square
                     self.last_move_to = move.to_square
-                    # Không gọi check_game_end() ngay, để nước đi được hiển thị trước
                     if self.board.turn == self.ai_color:
                         self.ai_thinking = True
                         self.ai_move_time = pygame.time.get_ticks()
@@ -56,7 +55,7 @@ class Game:
         if event.type == pygame.MOUSEBUTTONDOWN and not self.ai_thinking:
             x, y = pygame.mouse.get_pos()
             if x < 30 or y >= 600:
-                return  # click ngoài bàn cờ
+                return
 
             col = (x - 30) // 75
             row = y // 75
@@ -85,7 +84,6 @@ class Game:
                     self.board.push(move)
                     self.history_index = len(self.board.move_stack)
                     self.view_board = self.board.copy()
-                    # Không gọi check_game_end() ngay, để nước đi được hiển thị trước
                     if self.board.turn == self.ai_color:
                         self.ai_thinking = True
                         self.ai_move_time = pygame.time.get_ticks()
@@ -131,7 +129,6 @@ class Game:
                 self.last_move_from = last_move.from_square
                 self.last_move_to = last_move.to_square
 
-            # Kiểm tra trạng thái kết thúc sau khi nước đi của AI được áp dụng
             self.check_game_end()
 
     def check_game_end(self):

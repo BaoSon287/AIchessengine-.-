@@ -26,7 +26,6 @@ class AI:
                     except FileNotFoundError:
                         print("[Lỗi] Không tìm thấy baron30.bin")
 
-                    # ❌ Nếu không tìm thấy, dùng Searcher
                     if move is None:
                         searcher = Searcher()
                         move = searcher.iterative_deepening(board_state, max_depth=7, time_limit=9)

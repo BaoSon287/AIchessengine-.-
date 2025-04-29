@@ -5,7 +5,7 @@ from ui import draw_promotion_choices, draw_game_over
 import chess
 
 if __name__ == "__main__":
-    WIDTH, HEIGHT = 630, 630  # Tăng HEIGHT lên 630 để chứa thanh trắng (600 + 30)
+    WIDTH, HEIGHT = 630, 630 
     pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("Chess Game")
@@ -89,9 +89,9 @@ if __name__ == "__main__":
                 pygame.display.set_caption("Chess Game")
 
             replay_button = None
-            # Kiểm tra trạng thái kết thúc sau khi vẽ giao diện
+            
             game.check_game_end()
-            if not game.running:  # Nếu ván cờ vừa kết thúc, vẽ lại giao diện lần cuối trước khi hiển thị màn hình kết thúc
+            if not game.running:  
                 screen.fill((0, 0, 0))
                 draw_board(screen, flip,
                            last_move_from=game.last_move_from,
@@ -102,7 +102,7 @@ if __name__ == "__main__":
             pygame.display.flip()
             game.clock.tick(60)
 
-            # Nếu game over và đã hiện nút "Chơi lại"
+    
             if not game.running and replay_button:
                 waiting_for_replay = True
                 while waiting_for_replay:
@@ -113,5 +113,5 @@ if __name__ == "__main__":
                         elif event.type == pygame.MOUSEBUTTONDOWN:
                             if replay_button.collidepoint(event.pos):
                                 waiting_for_replay = False
-                                running = False  # Quay lại menu chọn AI
+                                running = False 
                     game.clock.tick(60)
