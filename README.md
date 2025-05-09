@@ -23,6 +23,11 @@
 ###### ▶️ Cách chạy
 - pip install pygame python-chess
 - python main.py
-
+### Thành quả đạt được 
+- Đánh thắng con bot trên web chess.com với elo 2200.
+### Đóng góp 
+- Lê Ngọc Quý 33,33%
+- Trần Văn Đông 33,33%
+- Nguyễn Quang Bảo Sơn 33,33%
 📚 Nguồn tham khảo
 https://www.youtube.com/watch?v=U4ogK0MIzqk&t=1045s
